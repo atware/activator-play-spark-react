@@ -1,0 +1,25 @@
+@()(headContent: Html)(body: Html)
+
+@js(src: String) = {
+<script type="text/javascript" src="@src"></script>
+}
+
+@css(src: String) = {
+<link rel="stylesheet" href="@src">
+}
+
+<html>
+  <head>
+    <title>Godzilla Prediction System</title>
+
+    <script data-main="js/main.js" type="text/javascript" src="/webjars/requirejs/2.1.17/require.min.js"></script>
+    <script type="text/javascript" src="/webjars/jquery/2.1.4/jquery.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&libraries=visualization"></script>
+    @css("css/main.css")
+    <link rel="stylesheet" media="screen" href="/webjars/bootstrap/3.3.4/css/bootstrap.css")" />
+    @headContent
+  </head>
+  <body>
+    @body
+  </body>
+</html>
