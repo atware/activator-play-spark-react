@@ -2,9 +2,7 @@ package common
 
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SQLContext
-import play.GlobalSettings
-import play.api.Logger
-
+import play.api._
 
 object AppGlobal extends GlobalSettings {
 
