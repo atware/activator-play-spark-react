@@ -1,10 +1,7 @@
-package service
+package services
 
-import akka.actor.{Actor, ActorLogging}
-import api.Marshalling
-import spray.json.ProductFormats
-import core.SparkConfig._
 import scala.util.Try
+import common.AppGlobal._
 
 case class LocationData(deviation: Int)
 case class Location(
@@ -16,17 +13,9 @@ case class Location(
   * ocean temperature for a given depth. Based on that parameter,
   * it retrieves potential Godzilla locations.
   */
-class GodzillaActor extends Actor with SearchActions with ActorLogging {
+object Godzilla {
 
-  def receive: Receive = {
-
-    case LocationData(deviation) =>
-      log.info("Received request for locations")
-      sender ! getLocationData(deviation)
-  }
-}
-
-/**
+  /**
   * SearchActions use a Try pattern to retrieve data from Spark and
   * map the results to Location case classes.
   * Try will contain either a Success or Failure class.
@@ -48,7 +37,7 @@ trait SearchActions {
     """
 
     Try {
-      val dataFrame = sqlContext.sql(query)
+      val dataFrame = SparkConfig.sqlContext.sql(query)
 
       dataFrame.map(row => Location(
         row.getDouble(0),
@@ -59,9 +48,10 @@ trait SearchActions {
         row.getDouble(5)
       )).collect().toList
     }
+
   }
 }
 
-trait LocationFormats extends Marshalling with ProductFormats {
-  implicit val LocationFormat = jsonFormat6(Location)
 }
+
+
