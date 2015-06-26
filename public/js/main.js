@@ -7,15 +7,15 @@
     // Packages = top-level folders; loads a contained file named 'main.js"
     packages: ['godzilla'],
     paths: {
-      'react': ['/webjars/react/0.13.1/react-with-addons'],
-      'JSXTransformer': ['/webjars/jsx-requirejs-plugin/0.6.0/js/JSXTransformer'],
-      'jsx': ['/webjars/jsx-requirejs-plugin/0.6.0/js/jsx'],
-      'jquery': ['/webjars/jquery/2.1.4/jquery'],
-      'react-router' : ['/webjars/react-router/0.13.2/ReactRouter'],
+      'react': ['../lib/react/react-with-addons'],
+      'JSXTransformer': ['../lib/jsx-requirejs-plugin/js/JSXTransformer'],
+      'jsx': ['../lib/jsx-requirejs-plugin/js/jsx'],
+      'jquery': ['../lib/jquery/jquery'],
+      'react-router' : ['../lib/react-router/0.13.2/ReactRouter'],
       'react-router-shim': 'react-router-shim',
-      'text': ['/webjars/requirejs-text/2.0.10-3/text'],
-      'bootstrap': ['/webjars/bootstrap/3.3.4/js/bootstrap'],
-      'react-bootstrap': ['/webjars/react-bootstrap/0.19.1/react-bootstrap']
+      'text': ['../lib/requirejs-text/text'],
+      'bootstrap': ['../lib/bootstrap/js/bootstrap'],
+      'react-bootstrap': ['../lib/react-bootstrap/react-bootstrap']
     },
     jsx: {
       fileExtension: '.jsx'

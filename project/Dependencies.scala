@@ -38,7 +38,7 @@ object Dependencies {
     jsxRequire,
     jquery,
     reactRouter,
-    bootstrap,
+    bootstrap exclude("org.webjars", "jquery"),
     reactBoot
   )
 }
