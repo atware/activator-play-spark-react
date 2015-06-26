@@ -20,7 +20,7 @@ object AppGlobal extends GlobalSettings {
 
   /**
     */
-  def onStart() {
+  override def onStart(app: Application) {
 
     Logger.info("Hello World")
     val dataFrame = SparkConfig.sqlContext.jsonFile("conf/data.json")
