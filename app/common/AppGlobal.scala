@@ -15,7 +15,6 @@ object AppGlobal extends GlobalSettings {
     val sparkContext = new SparkContext(sparkConf)
     val sqlContext = new SQLContext(sparkContext)
 
-
   }
 
   /**

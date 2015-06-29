@@ -1,22 +1,26 @@
 package controllers
 
-import org.specs2.mutable._
-import org.specs2.runner._
+import scala.concurrent.Future
+import org.scalatest._
+import org.scalatestplus.play._
+
 import play.api.mvc._
 import play.api.test._
 import play.api.test.Helpers._
 
-import scala.concurrent.{Await, ExecutionContext}
+class ApplicationSpec extends PlaySpec with Results {
 
-class ApplicationSpec extends Specification {
+  class TestController() extends Controller with ApplicationController
 
-  "Application should" should {
+  "Application Page#index" should {
 
-    "return landing page on /" in {
-
-      val result = Application.index(FakeRequest(GET, "/"))
-
+    "should be valid" in {
+      val controller = new TestController()
+      val result: Future[Result] = controller.index().apply(FakeRequest())
       status(result) mustEqual OK
+
     }
+
   }
+
 }

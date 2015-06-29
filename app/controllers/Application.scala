@@ -12,9 +12,8 @@ import scala.util.Try
 case class Location(
     depth: Double, temperature: Double, cast: Long, cruise: String, latitude: Double, longitude: Double)
 
-object Application extends Controller {
-
-
+trait ApplicationController {
+  this: Controller =>
 
   def index = Action {
     Ok(views.html.index())
@@ -66,3 +65,5 @@ object Application extends Controller {
   }
 
 }
+
+object Application extends Controller with ApplicationController

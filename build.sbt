@@ -1,5 +1,5 @@
 name    := "play-spark-react"
-version := "4.0-SNAPSHOT"
+version := "4.1-SNAPSHOT"
 
 licenses := Seq("Apache-2.0" -> url("http://opensource.org/licenses/Apache-2.0"))
 
