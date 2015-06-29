@@ -21,7 +21,6 @@ object AppGlobal extends GlobalSettings {
     */
   override def onStart(app: Application) {
 
-    Logger.info("Hello World")
     val dataFrame = SparkConfig.sqlContext.jsonFile("conf/data.json")
     dataFrame.registerTempTable("godzilla")
     dataFrame.cache()

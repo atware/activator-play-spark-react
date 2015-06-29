@@ -19,24 +19,10 @@ trait ApplicationController {
     Ok(views.html.index())
   }
 
-  def locations(deviation:Int) = Action { implicit request =>
-    implicit val locationToJson = new Writes[Location] {
-      def writes(location: Location) = Json.obj(
-        "depth" -> location.depth,
-        "temperature" -> location.temperature,
-        "cast" -> location.cast,
-        "cruise" -> location.cruise,
-        "latitude" -> location.latitude,
-        "longitude" -> location.longitude
-      )
-    }
+}
 
-    Ok(
-
-      Json.toJson(getLocationData(deviation))
-    )
-
-  }
+trait LocationController {
+  this: Controller =>
 
   def getLocationData(deviation: Int): List[Location] = {
     val query = s"""
@@ -64,6 +50,26 @@ trait ApplicationController {
     )).collect().toList
   }
 
+  def locations(deviation:Int) = Action { implicit request =>
+    implicit val locationToJson = new Writes[Location] {
+      def writes(location: Location) = Json.obj(
+        "depth" -> location.depth,
+        "temperature" -> location.temperature,
+        "cast" -> location.cast,
+        "cruise" -> location.cruise,
+        "latitude" -> location.latitude,
+        "longitude" -> location.longitude
+      )
+    }
+
+    Ok(
+
+      Json.toJson(getLocationData(deviation))
+    )
+
+  }
+  
+
 }
 
-object Application extends Controller with ApplicationController
+object Application extends Controller with ApplicationController with LocationController
