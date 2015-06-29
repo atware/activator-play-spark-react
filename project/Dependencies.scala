@@ -4,7 +4,7 @@ object Version {
   val spark          = "1.3.0"
   val requirejs      = "2.1.17"
   val requirejsText  = "2.0.10-3"
-  val react          = "0.13.1"
+  val react          = "0.13.3"
   val jsxRequirejs   = "0.6.0"
   val jquery         = "2.1.4"
   val reactRouter    = "0.13.2"

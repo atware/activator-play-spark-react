@@ -7,7 +7,7 @@
     // Packages = top-level folders; loads a contained file named 'main.js"
     packages: ['godzilla'],
     paths: {
-      'react': ['../lib/react/react-with-addons'],
+      'react': ['../lib/jsx-requirejs-plugin/js/react-with-addons'],
       'JSXTransformer': ['../lib/jsx-requirejs-plugin/js/JSXTransformer'],
       'jsx': ['../lib/jsx-requirejs-plugin/js/jsx'],
       'jquery': ['../lib/jquery/jquery'],
