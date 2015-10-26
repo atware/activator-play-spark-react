@@ -1,16 +1,10 @@
 package controllers
 
-import play.api._
-import play.api.mvc._
-import play.api.libs.json._
-import play.api.libs.functional.syntax._
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits._
 import common.AppGlobal._
-import scala.util.Try
+import play.api.libs.json._
+import play.api.mvc._
 
-case class Location(
-    depth: Double, temperature: Double, cast: Long, cruise: String, latitude: Double, longitude: Double)
+case class Location(depth: Double, temperature: Double, cast: Long, cruise: String, latitude: Double, longitude: Double)
 
 trait ApplicationController {
   this: Controller =>
@@ -62,11 +56,7 @@ trait LocationController {
       )
     }
 
-    Ok(
-
-      Json.toJson(getLocationData(deviation))
-    )
-
+    Ok(Json.toJson(getLocationData(deviation)))
   }
   
 
