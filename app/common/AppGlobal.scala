@@ -6,10 +6,13 @@ import play.api._
 
 object AppGlobal extends GlobalSettings {
 
+  /**
+   * Consolidate Spark into a configuration object
+   */
   object SparkConfig {
 
     @transient val sparkConf =new SparkConf()
-      .setMaster("local[4]")
+      .setMaster("local[2]")
       .setAppName("gds")
 
     val sparkContext = new SparkContext(sparkConf)
@@ -18,10 +21,11 @@ object AppGlobal extends GlobalSettings {
   }
 
   /**
-    */
+   * On start load the json data from conf/data.json into in-memory Spark
+   */
   override def onStart(app: Application) {
 
-    val dataFrame = SparkConfig.sqlContext.jsonFile("conf/data.json")
+    val dataFrame = SparkConfig.sqlContext.read.json("conf/data.json")
     dataFrame.registerTempTable("godzilla")
     dataFrame.cache()
   }
