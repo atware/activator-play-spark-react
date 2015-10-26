@@ -1,7 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<title>Spray Spark React</title>
-<!-- 2015-05-27 Wed 15:45 -->
+<title>Play Spark React</title>
+<!-- 2015-10-26 Mon 16:03 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="atWare, inc" />
@@ -9,15 +12,15 @@
  />
 </head>
 <body>
-
-
 <div id="content">
-<h1 class="title">Spray Spark React</h1>
+<h1 class="title">Play Spark React</h1>
 
+
+<div id="outline-container-sec-1" class="outline-2">
 <h2 id="sec-1">About This Application</h2>
-
+<div class="outline-text-2" id="text-1">
 <p>
-This application demonstrates how to integrate <a href="http://spray.io/">Spray IO</a> and <a href="http://spark.apache.org/">Apache Spark</a> together, using <a href="http://spark.apache.org/sql/">Spark SQL</a> to perform a
+This application demonstrates how to integrate Play and <a href="http://spark.apache.org/">Apache Spark</a> together, using <a href="http://spark.apache.org/sql/">Spark SQL</a> to perform a
 non-trivial query. The application has a minimal user interface as well, mapping coordinates to
 the <a href="http://developers.google.com/maps/">Google Map API</a> with <a href="http://facebook.github.io/react/">React</a> and a <a href="http://getbootstrap.com/components/#btn-groups">Bootstrap Toolbar</a> from the <a href="http://react-bootstrap.github.io/">React Bootstrap</a> project.
 </p>
@@ -25,168 +28,55 @@ the <a href="http://developers.google.com/maps/">Google Map API</a> with <a href
 <p>
 This project uses data from the <a href="http://www.nodc.noaa.gov/OC5/WOD/pr_wod.html">World Ocean Database (WOD)</a>, maintained by the (US) <a href="http://www.noaa.gov/">National Oceanic and Atmospheric Administration</a>.
 It reads a small subset of WOD data that has been downloaded and parsed separately (specifically,
-Moored Buoys (MRB) data from around Japan) and determines possible locations for ゴジラ (Godzilla), a potentially fictional ocean creature.
+Moored Buoys (MRB) data from around Japan) and determines possible locations for ゴジラ (Godzilla), a potentially fictious marine animal.
 </p>
 
 <p>
 At a high level, when the application is started, for example, via Activator, a Spark instance is created in memory,
-and a Spray-based HTTP service is started.
+and a Play-based web application is started.
 </p>
 
 <p>
 When you navigate your browser to <a href="http://localhost:9000">http://localhost:9000</a>, a request is made to the server, and a response is generated
-using a <a href="http://github.com/playframework/twirl">Twirl Template</a>. This template returns HTML and loads React via <a href="http://requirejs.org/">requirejs</a>.
+using a Play template. This template returns HTML and loads React via <a href="http://requirejs.org/">requirejs</a>.
 A JS request to <a href="http://localhost:9000/locations/">http://localhost:9000/locations/</a> (plus a number - for example, <a href="http://localhost:9000/locations/13">http://localhost:9000/locations/13</a>)
-is serviced by an <a href="http://akka.io/">Akka actor</a> responsible for querying Spark.
-</p>
-
-<p>
+is serviced by a Play controller function that makes a request to Spark to execute a job and return the results.
 Assuming that a valid request is made and all goes well, a JSON response will be returned.
 </p>
 
 <p>
-Results are retrieved from Spark as a <a href="http://spark.apache.org/docs/1.3.0/sql-programming-guide.html#dataframes">Spark DataFrame</a>, and are mapped to a list of Location classes.
-Using <a href="http://spray.io/documentation/1.1.2/spray-httpx/spray-json-support/">Spray's JSON support</a>, the results are automatically transformed to JSON from Spray's complete directive.
-</p>
-
-<p>
-The following is a high level diagram describing this process:
-</p>
-
-<p><img src="tutorial/gds.png" alt="gds.png" />
+Results are retrieved from Spark as a <a href="http://spark.apache.org/docs/latest/sql-programming-guide.html">Spark DataFrame</a>, and are mapped to a list of Location classes before being converted to JSON as the response.
 </p>
 </div>
+</div>
+
 
 <div id="outline-container-sec-2" class="outline-2">
 <h2 id="sec-2">The User Interface</h2>
+<div class="outline-text-2" id="text-2">
 
+<div class="figure">
 <p><img src="tutorial/screenshot.png" alt="screenshot.png" />
 </p>
+</div>
 
 <p>
 The Refinement toolbar buttons change the threshold of deviation from the average temperature required to 
 "get a hit". Low refinement results in more markers, high refinement only one. The default is medium.
 </p>
 </div>
-
-
-<div id="outline-container-sec-3" class="outline-2">
-<h2 id="sec-3">Akka and Spray</h2>
-
-<p>
-The Spray design of this application is based largely on <a href="http://github.com/darek">Darek Zoń's</a> excellent
-<a href="http://github.com/darek/spray-slick-seed">spray-slick-seed</a>. This is a smaller version of the spray-slick-seed. You are encouraged to also
-review his template.
-</p>
-
-<p>
-The Scala code can be best understood via their package names as functional units.
-</p>
-
-<p>
-The <a href="http:#code/src/main/scala/core">core package</a> contains code for configuring and starting the HTTP server, initializing Spark, and creating the Akka Actor.
-</p>
-
-<p>
-The <a href="http:#code/src/main/scala/service">service package</a> contains the actor responsible for interacting with Spark (the service). This functionality is
-encapsulated in a trait:
-</p>
-
-<pre><code>
-trait SearchActions {
-
-
-  def getLocationData(deviation: Int): Try[List[Location]] = {
-    val query = s"""
-    SELECT
-      T1.depth, T1.temperature, T1.castNumber, T1.cruiseId, T1.latitude, T1.longitude
-    FROM (
-     SELECT depth, temperature, castNumber, cruiseId,
-       latitude, longitude from godzilla) AS T1
-     JOIN (
-       SELECT avg(temperature) as average, depth from godzilla group by depth
-     )  AS T2
-     ON T1.depth = T2.depth
-     WHERE T1.temperature > T2.average + $deviation
-    """
-
-    Try {
-      val dataFrame = sqlContext.sql(query)
-
-      dataFrame.map(row => Location(
-        row.getDouble(0),
-        row.getDouble(1),
-        row.getLong(2),
-        row.getString(3),
-        row.getDouble(4),
-        row.getDouble(5)
-      )).collect().toList
-    }
-  }
-}
-</code></pre>
-
-<p>
-and is easy to <a href="http:#code/src/test/scala/service/GodzillaActorSpec.scala">test via specs2</a>.
-</p>
-
-<p>
-The <a href="http:#code/src/main/scala/api">api package</a> defines the routes to be serviced by the application.
-</p>
-
-<p>
-There is a path that loads the index page template:
-</p>
-<pre><code>
-  val index = path("") {
-    get {
-      complete {
-        html.index()
-      }
-    }
-  }
-</code></pre>
-
-<p>
-This calls the godzilla service actor:
-</p>
-<pre><code>
-  val locations = path("locations" / IntNumber) { deviation =>
-    get {
-      complete {
-        (godzillaActor ? LocationData(deviation)).mapTo[Try[List[Location]]]
-      }
-    }
-  }
-</code></pre>
-
-<p>
-And the last path refers to JS dependencies contained in webjars.
-Also note, getFromResourceDirectory is a path to the JS and CSS files.
-The paths are accumulated as a route sequence.
-</p>
-<pre><code>
-  val webjars = pathPrefix("webjars") {
-    get {
-      getFromResourceDirectory("META-INF/resources/webjars")
-    }
-  }
-
-  val routes = index ~ locations ~ webjars ~ getFromResourceDirectory("assets")
-</code></pre>
 </div>
 
-
-<div id="outline-container-sec-4" class="outline-2">
-<h2 id="sec-4">Spark</h2>
-
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">Spark</h2>
+<div class="outline-text-2" id="text-3">
 <p>
-Configuration is provided in the <a href="http:#code/src/main/resources/application.conf">application.conf</a> file. When the Akka system starts, Spark is booted
+Configuration is provided in the <a href="http:#code/conf/application.conf">application.conf</a> file. When the Akka system starts, Spark is booted
 as well.
 </p>
 
 <p>
-Data is provided in the <a href="http:#code/src/main/resources/data.json">data.json</a> file. To spare you the trouble, it looks like this only bigger:
+Data is provided in the <a href="http:#code/conf/data.json">data.json</a> file. To spare you the trouble, it looks like this only bigger:
 </p>
 
 <pre><code>
@@ -196,30 +86,30 @@ Data is provided in the <a href="http:#code/src/main/resources/data.json">data.j
 </code></pre>
 
 <p>
-The main prerogative of this application is to demonstrate a simple application using Spray and Spark.
-In this specific case we are starting Spark in the same JVM as the Spray server.
+The main prerogative of this application is to demonstrate a simple application using Play and Spark.
+In this specific case we are starting Spark in the same JVM as the Play app server.
 In a production setting, you will not want to run Spark in this manner.
 </p>
 
 <p>
-The master-uri in <a href="http:#code/src/main/resources/application.conf">the configuration file</a> can be changed to reference a standalone Spark cluster.
+The master-uri in <a href="http:#code/conf/application.conf">the configuration file</a> can be changed to reference a standalone Spark cluster.
 However, you may or may not want to load the test data into it, so consider that before doing so.
 </p>
 </div>
+</div>
 
-
-<div id="outline-container-sec-5" class="outline-2">
-<h2 id="sec-5">The Client</h2>
-
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4">The Client</h2>
+<div class="outline-text-2" id="text-4">
 <p>
 Facebook React provides a framework for building nice a component-based user interface.
 This application uses the JavaScript syntax extension, <a href="http://facebook.github.io/react/docs/jsx-in-depth.html">JSX</a>. The code for the client is located in
-the <a href="http:#code/src/main/resources/assets">assets directory</a>.
-Requirejs is used for dependency management, the requirejs configuration is located in <a href="http:#code/src/main/resources/assets/js/main.js">main.js</a>.
+the <a href="http:#code/public/js">public directory</a>.
+Requirejs is used for dependency management, the requirejs configuration is located in <a href="http:#code/public/js/main.js">main.js</a>.
 </p>
 
 <p>
-main.js loads and initializes <a href="http:#code/src/main/resources/assets/js/app.jsx">app.jsx</a>.
+main.js loads and initializes <a href="http:#code/public/js/app.jsx">app.jsx</a>.
 </p>
 
 <p>
@@ -228,39 +118,16 @@ and creating the two React components- the Toolbar and the Map.
 </p>
 
 <p>
-<a href="http:#code/src/main/resources/assets/js/godzilla/map.jsx">Map.jsx</a> creates the Google Map and places LatLng locations and Markers. It responds to changes in location data
+<a href="http:#code/public/js/godzilla/map.jsx">Map.jsx</a> creates the Google Map and places LatLng locations and Markers. It responds to changes in location data
 automatically because <a href="http://facebook.github.io/react/docs/multiple-components.html#ownership">it is owned by the App</a> component.
 </p>
 
 <p>
-<a href="http:#code/src/main/resources/assets/js/godzilla/toolbar.jsx">Toolbar.jsx</a> creates an extremely simple Bootstrap toolbar. The onclick events of the toolbar call the filter function
+<a href="http:#code/public/js/godzilla/toolbar.jsx">Toolbar.jsx</a> creates an extremely simple Bootstrap toolbar. The onclick events of the toolbar call the filter function
 in app.jsx, passing hardcoded values used in the server-side service to refine the query for data.
 </p>
 </div>
-
-
-<div id="outline-container-sec-6" class="outline-2">
-<h2 id="sec-6">Next Steps</h2>
-
-<p>
-To extend this application, consider creating a new actor in the <a href="http:#code/src/main/scala/service">service package</a>.
-For example, perhaps a different algorithm could be used to query the data and return 
-a different set of results. This could be implemented like the GodzillaActor.
-</p>
-
-<p>
-You can use the unit test as a guide to test your new actor.
-</p>
-
-<p>
-Once you are satisfied with the actor, the next step is to add the actor to the system in 
-<a href="http:#code/src/main/scala/core/application.scala">application.scala</a>.
-</p>
-
-<p>
-Next call the actor in <a href="http:#code/src/main/scala/core/api.scala">api.scala</a>, adding the route(s) to call the service.
-</p>
 </div>
-
+</div>
 </body>
 </html>

@@ -1,7 +1,7 @@
-#+TITLE: Spray Spark React
+#+TITLE: Play Spark React
 #+AUTHOR: atWare, inc
 #+EMAIL: jeff@atware.co.jp
-#+DATE: 2015-05-19
+#+DATE: 2015-10-26
 #+DESCRIPTION: A little love, from atWare
 #+LANGUAGE:  en
 #+OPTIONS: toc:0 html-style:nil html-postamble:nil
@@ -11,31 +11,25 @@
 
 ** About This Application
 
-This application demonstrates how to integrate [[http://spray.io/][Spray IO]] and [[http://spark.apache.org/][Apache Spark]] together, using [[http://spark.apache.org/sql/][Spark SQL]] to perform a
+This application demonstrates how to integrate Play and [[http://spark.apache.org/][Apache Spark]] together, using [[http://spark.apache.org/sql/][Spark SQL]] to perform a
 non-trivial query. The application has a minimal user interface as well, mapping coordinates to
 the [[http://developers.google.com/maps/][Google Map API]] with [[http://facebook.github.io/react/][React]] and a [[http://getbootstrap.com/components/#btn-groups][Bootstrap Toolbar]] from the [[http://react-bootstrap.github.io/][React Bootstrap]] project.
 
 This project uses data from the [[http://www.nodc.noaa.gov/OC5/WOD/pr_wod.html][World Ocean Database (WOD)]], maintained by the (US) [[http://www.noaa.gov/][National Oceanic and Atmospheric Administration]].
 It reads a small subset of WOD data that has been downloaded and parsed separately (specifically,
-Moored Buoys (MRB) data from around Japan) and determines possible locations for ゴジラ (Godzilla), a potentially fictional ocean creature.
+Moored Buoys (MRB) data from around Japan) and determines possible locations for ゴジラ (Godzilla), a potentially fictious marine animal.
 
 At a high level, when the application is started, for example, via Activator, a Spark instance is created in memory,
-and a Spray-based HTTP service is started.
+and a Play-based web application is started.
 
 When you navigate your browser to http://localhost:9000, a request is made to the server, and a response is generated
-using a [[http://github.com/playframework/twirl][Twirl Template]]. This template returns HTML and loads React via [[http://requirejs.org/][requirejs]].
+using a Play template. This template returns HTML and loads React via [[http://requirejs.org/][requirejs]].
 A JS request to http://localhost:9000/locations/ (plus a number - for example, http://localhost:9000/locations/13)
-is serviced by an [[http://akka.io/][Akka actor]] responsible for querying Spark.
-
+is serviced by a Play controller function that makes a request to Spark to execute a job and return the results.
 Assuming that a valid request is made and all goes well, a JSON response will be returned.
 
-Results are retrieved from Spark as a [[http://spark.apache.org/docs/1.3.0/sql-programming-guide.html#dataframes][Spark DataFrame]], and are mapped to a list of Location classes.
-Using [[http://spray.io/documentation/1.1.2/spray-httpx/spray-json-support/][Spray's JSON support]], the results are automatically transformed to JSON from Spray's complete directive.
+Results are retrieved from Spark as a [[http://spark.apache.org/docs/latest/sql-programming-guide.html][Spark DataFrame]], and are mapped to a list of Location classes before being converted to JSON as the response.
 
-The following is a high level diagram describing this process:
-
-[[file:tutorial/gds.png
-]]
 
 ** The User Interface
 
@@ -44,106 +38,12 @@ The following is a high level diagram describing this process:
 The Refinement toolbar buttons change the threshold of deviation from the average temperature required to 
 "get a hit". Low refinement results in more markers, high refinement only one. The default is medium.
 
-** Akka and Spray
-
-The Spray design of this application is based largely on [[http://github.com/darek][Darek Zoń's]] excellent
-[[http://github.com/darek/spray-slick-seed][spray-slick-seed]]. This is a smaller version of the spray-slick-seed. You are encouraged to also
-review his template.
-
-The Scala code can be best understood via their package names as functional units.
-
-The [[http:#code/src/main/scala/core][core package]] contains code for configuring and starting the HTTP server, initializing Spark, and creating the Akka Actor.
-
-The [[http:#code/src/main/scala/service][service package]] contains the actor responsible for interacting with Spark (the service). This functionality is
-encapsulated in a trait:
-
-#+BEGIN_HTML
-<pre><code>
-trait SearchActions {
-
-
-  def getLocationData(deviation: Int): Try[List[Location]] = {
-    val query = s"""
-    SELECT
-      T1.depth, T1.temperature, T1.castNumber, T1.cruiseId, T1.latitude, T1.longitude
-    FROM (
-     SELECT depth, temperature, castNumber, cruiseId,
-       latitude, longitude from godzilla) AS T1
-     JOIN (
-       SELECT avg(temperature) as average, depth from godzilla group by depth
-     )  AS T2
-     ON T1.depth = T2.depth
-     WHERE T1.temperature > T2.average + $deviation
-    """
-
-    Try {
-      val dataFrame = sqlContext.sql(query)
-
-      dataFrame.map(row => Location(
-        row.getDouble(0),
-        row.getDouble(1),
-        row.getLong(2),
-        row.getString(3),
-        row.getDouble(4),
-        row.getDouble(5)
-      )).collect().toList
-    }
-  }
-}
-</code></pre>
-#+END_HTML
-
-and is easy to [[http:#code/src/test/scala/service/GodzillaActorSpec.scala][test via specs2]].
-
-The [[http:#code/src/main/scala/api][api package]] defines the routes to be serviced by the application.
-
-There is a path that loads the index page template:
-#+BEGIN_HTML
-<pre><code>
-  val index = path("") {
-    get {
-      complete {
-        html.index()
-      }
-    }
-  }
-</code></pre>
-#+END_HTML
-
-This calls the godzilla service actor:
-#+BEGIN_HTML
-<pre><code>
-  val locations = path("locations" / IntNumber) { deviation =>
-    get {
-      complete {
-        (godzillaActor ? LocationData(deviation)).mapTo[Try[List[Location]]]
-      }
-    }
-  }
-</code></pre>
-#+END_HTML
-
-And the last path refers to JS dependencies contained in webjars.
-Also note, getFromResourceDirectory is a path to the JS and CSS files.
-The paths are accumulated as a route sequence.
-#+BEGIN_HTML
-<pre><code>
-  val webjars = pathPrefix("webjars") {
-    get {
-      getFromResourceDirectory("META-INF/resources/webjars")
-    }
-  }
-
-  val routes = index ~ locations ~ webjars ~ getFromResourceDirectory("assets")
-</code></pre>
-#+END_HTML
-
 ** Spark
 
-Configuration is provided in the [[http:#code/src/main/resources/application.conf][application.conf]] file. When the Akka system starts, Spark is booted
+Configuration is provided in the [[http:#code/conf/application.conf][application.conf]] file. When the Akka system starts, Spark is booted
 as well.
 
-Data is provided in the [[http:#code/src/main/resources/data.json][data.json]] file. To spare you the trouble, it looks like this only bigger:
+Data is provided in the [[http:#code/conf/data.json][data.json]] file. To spare you the trouble, it looks like this only bigger:
 
 #+BEGIN_HTML
 <pre><code>
@@ -153,40 +53,27 @@ Data is provided in the [[http:#code/src/main/resources/data.json][data.json]] f
 </code></pre>
 #+END_HTML
 
-The main prerogative of this application is to demonstrate a simple application using Spray and Spark.
-In this specific case we are starting Spark in the same JVM as the Spray server.
+The main prerogative of this application is to demonstrate a simple application using Play and Spark.
+In this specific case we are starting Spark in the same JVM as the Play app server.
 In a production setting, you will not want to run Spark in this manner.
 
-The master-uri in [[http:code#src/main/resources/application.conf][the configuration file]] can be changed to reference a standalone Spark cluster.
+The master-uri in [[http:#code/conf/application.conf][the configuration file]] can be changed to reference a standalone Spark cluster.
 However, you may or may not want to load the test data into it, so consider that before doing so.
 
 ** The Client
 
 Facebook React provides a framework for building nice a component-based user interface.
 This application uses the JavaScript syntax extension, [[http://facebook.github.io/react/docs/jsx-in-depth.html][JSX]]. The code for the client is located in
-the [[http:#code/src/main/resources/assets][assets directory]].
-Requirejs is used for dependency management, the requirejs configuration is located in [[http:#code/src/main/resources/assets/js/main.js][main.js]].
+the [[http:#code/public/js][public directory]].
+Requirejs is used for dependency management, the requirejs configuration is located in [[http:#code/public/js/main.js][main.js]].
 
-main.js loads and initializes [[http:#code/src/main/resources/assets/js/app.jsx][app.jsx]].
+main.js loads and initializes [[http:#code/public/js/app.jsx][app.jsx]].
 
 App.jsx is responsible for making the ajax call for location data (using JQuery),
 and creating the two React components- the Toolbar and the Map.
 
-[[http:#code/src/main/resources/assets/js/godzilla/map.jsx][Map.jsx]] creates the Google Map and places LatLng locations and Markers. It responds to changes in location data
+[[http:#code/public/js/godzilla/map.jsx][Map.jsx]] creates the Google Map and places LatLng locations and Markers. It responds to changes in location data
 automatically because [[http://facebook.github.io/react/docs/multiple-components.html#ownership][it is owned by the App]] component.
 
-[[http:#code/src/main/resources/assets/js/godzilla/toolbar.jsx][Toolbar.jsx]] creates an extremely simple Bootstrap toolbar. The onclick events of the toolbar call the filter function
+[[http:#code/public/js/godzilla/toolbar.jsx][Toolbar.jsx]] creates an extremely simple Bootstrap toolbar. The onclick events of the toolbar call the filter function
 in app.jsx, passing hardcoded values used in the server-side service to refine the query for data.
-
-** Next Steps
-
-To extend this application, consider creating a new actor in the [[http:#code/src/main/scala/service][service package]].
-For example, perhaps a different algorithm could be used to query the data and return 
-a different set of results. This could be implemented like the GodzillaActor.
-
-You can use the unit test as a guide to test your new actor.
-
-Once you are satisfied with the actor, the next step is to add the actor to the system in 
-[[http:#code/src/main/scala/core/application.scala][application.scala]].
-
-Next call the actor in [[http:#code/src/main/scala/core/api.scala][api.scala]], adding the route(s) to call the service.
