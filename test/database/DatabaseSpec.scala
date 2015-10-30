@@ -16,4 +16,8 @@ class DatabaseSpec extends FlatSpec with MustMatchers {
     val latlongs = config.as[List[LatLong]]("application")
     latlongs.size mustEqual 2
   }
+
+  "running load" should "output random numbers" in {
+    Database.load()
+  }
 }
