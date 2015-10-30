@@ -14,6 +14,9 @@ object Version {
   val scalaTestPlus = "1.4.0-M4"
   val slf4japi = "1.7.12"
   val slf4jsimple = "1.7.12"
+  val h2 = "1.4.190"
+  val scalalike = "2.2.9"
+  val ficus = "1.1.2"
 }
 
 object Library {
@@ -23,6 +26,9 @@ object Library {
   val scalaTestPlus = "org.scalatestplus" %% "play" % Version.scalaTestPlus
   val slf4japi = "org.slf4j" % "slf4j-api" % Version.slf4japi % "provided"
   val slf4jnop = "org.slf4j" % "slf4j-nop" % Version.slf4jsimple % "test"
+  val scalalike = "org.scalikejdbc" %% "scalikejdbc" % Version.scalalike
+  val h2 = "com.h2database"  %  "h2" % Version.h2
+  val ficus = "net.ceedubs" %% "ficus" % Version.ficus
 
   // webjar related dependencies
   val requireJs = "org.webjars" % "requirejs" % Version.requirejs
@@ -51,6 +57,9 @@ object Dependencies {
     bootstrap exclude("org.webjars", "jquery"),
     reactBoot,
     scalaTest,
-    scalaTestPlus
+    scalaTestPlus,
+    scalalike,
+    h2,
+    ficus
   )
 }
