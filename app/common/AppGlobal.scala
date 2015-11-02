@@ -31,9 +31,16 @@ object AppGlobal extends GlobalSettings {
    */
   override def onStart(app: Application) {
     Database.load
-//    val dataFrame = SparkConfig.sqlContext.read.json("conf/data.json")
-//    dataFrame.registerTempTable("godzilla")
-//    dataFrame.cache()
+    val props = new java.util.Properties()
+    props.put("user","user")
+    props.put("password","pass")
+    props.put("driver", "org.h2.Driver")
+    val dataFrame =SparkConfig.sqlContext.read.jdbc(
+      "jdbc:h2:mem:japan_ocean",
+      "(select year, month, depth, latitude, longitude, temperature from depth_measurements) as d",
+    props)
+    dataFrame.registerTempTable("godzilla")
+    dataFrame.cache()
   }
 
 }

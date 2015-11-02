@@ -23,7 +23,7 @@ define(function(require) {
     getLocations: function() {
       $.ajax({
         'type': 'GET',
-        'url': '/locations/' + this.props.deviation,
+        'url': '/locations/',
         'contentType': 'application/json',
         'async': 'false',
         'success' : function(data) {

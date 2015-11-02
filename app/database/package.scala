@@ -9,6 +9,7 @@ package object database {
 
   case class LatLong(lat: String, long: String)
   case class Depth(value: String, factor: String)
+  case class Month(value: String, factor: String)
 
   implicit val latLongReader: ValueReader[List[LatLong]] = ValueReader.relative { config =>
     val entries = config.as[List[String]]("latlongs")
@@ -23,6 +24,14 @@ package object database {
     entries.map { d =>
       val ds = d.split(":")
       Depth(ds(0), ds(1))
+    }
+  }
+
+  implicit val monthReader: ValueReader[List[Month]] = ValueReader.relative { config =>
+    val entries = config.as[List[String]]("months")
+    entries.map { d =>
+      val ds = d.split(":")
+      Month(ds(0), ds(1))
     }
   }
 }
